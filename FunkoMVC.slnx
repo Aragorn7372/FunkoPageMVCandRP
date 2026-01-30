@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="CommonServices/CommonServices.csproj" />
+  <Project Path="FunkoMVC/FunkoMVC.csproj" />
+  <Project Path="FunkoRP/FunkoRP.csproj" />
+</Solution>
