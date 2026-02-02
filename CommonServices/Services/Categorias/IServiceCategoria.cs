@@ -1,6 +1,6 @@
-﻿namespace CommonServices.Services;
+﻿using CommonServices.Dto;
+using CommonServices.Error;
 
-public class IServiceCategoria
-{
-    
-}
+namespace CommonServices.Services.Categorias;
+
+public interface IServiceCategoria : IService<CategoriaResponseDto, string, CategoriaError>;

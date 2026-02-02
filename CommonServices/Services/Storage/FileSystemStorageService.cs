@@ -1,231 +1,180 @@
-﻿using FunkoApi.config;
-using FunkoApi.exception;
-using Microsoft.Extensions.Options;
-using Path = System.IO.Path;
+﻿using CommonServices.Error;
+using CSharpFunctionalExtensions;
 
-namespace FunkoApi.Service.storage;
+namespace CommonServices.Services.Storage;
+
 
 public class FileSystemStorageService : IStorageService
 {
-    private readonly StorageSettings _settings;
-    private readonly ILogger<FileSystemStorageService> _logger;
     private readonly string _rootPath;
-
-    public FileSystemStorageService(
-        IOptions<StorageSettings> settings,
-        ILogger<FileSystemStorageService> logger)
+    private readonly string _uploadPath;
+    private readonly long _maxFileSize;
+    private readonly string[] _allowedExtensions;
+    private readonly string[] _allowedContentTypes;
+    private readonly ILogger<FileSystemStorageService> _logger;
+    
+    public FileSystemStorageService(IConfiguration configuration, ILogger<FileSystemStorageService> logger, IWebHostEnvironment env)
     {
-        _settings = settings.Value;
         _logger = logger;
-        
-        // Resolver la ruta absoluta
-        _rootPath = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, 
-            "..", "..", "..", 
-            _settings.RootPath));
-        
-        // Normalizar para diferentes OS
-        _rootPath = Path.GetFullPath(_rootPath);
-    }
 
-    public Task InitAsync(CancellationToken cancellationToken = default)
-    {
-        return Task.Run(() =>
+        // Configuración desde appsettings.json (ruta relativa a wwwroot)
+        _uploadPath = configuration["Storage:UploadPath"] ?? "uploads";
+        _maxFileSize = configuration.GetValue<long>("Storage:MaxFileSize", 5 * 1024 * 1024);
+        _allowedExtensions = configuration.GetSection("Storage:AllowedExtensions").Get<string[]>()
+                             ?? [".jpg", ".jpeg", ".png", ".gif"];
+        _allowedContentTypes = configuration.GetSection("Storage:AllowedContentTypes").Get<string[]>()
+                               ?? ["image/jpeg", "image/png", "image/gif"];
+
+        // Ruta absoluta: usar WebHostEnvironment.WebRootPath (apunta a wwwroot)
+        _rootPath = System.IO.Path.Combine(env.WebRootPath, _uploadPath); //wwwroot + /uploads (este último definido en el archivo appsettings.json
+
+        // Crear directorio si no existe
+        if (!Directory.Exists(_rootPath))
         {
-            // Crear directorios necesarios
-            var directories = new[]
-            {
-                _rootPath,
-                Path.Combine(_rootPath, _settings.ImagesFolder),
-                Path.Combine(_rootPath, _settings.DocumentsFolder),
-                Path.Combine(_rootPath, "temp")
-            };
+            Directory.CreateDirectory(_rootPath);
+        }
 
-            foreach (var dir in directories)
+        _logger.LogInformation("Storage service inicializado en: {Path}", _rootPath);
+    }
+    
+    private static string GenerateUniqueFilename(string originalFilename)
+    {
+        var extension = System.IO.Path.GetExtension(originalFilename).ToLowerInvariant();
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        var uniqueId = Guid.NewGuid().ToString("N")[..8];
+        var sanitizedName = System.IO.Path.GetFileNameWithoutExtension(originalFilename)
+            .Replace(" ", "_")
+            .Replace("-", "_");
+        return $"{timestamp}_{uniqueId}_{sanitizedName}{extension}";
+    }
+    
+    private UnitResult<FunkoError> ValidateFile(IFormFile file)
+    {
+        if (file is null or { Length: 0 })
+        {
+            return UnitResult.Failure<FunkoError>(new FunkoStorageError("Archivo vacío"));
+        }
+
+        if (file.Length > _maxFileSize)
+        {
+            return UnitResult.Failure<FunkoError>(
+                new FunkoStorageError("Archivo demasiado grande. Extensión máxima: {}" + _maxFileSize));
+        }
+
+        var extension = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!_allowedExtensions.Contains(extension))
+        {
+            return UnitResult.Failure<FunkoError>(
+                new FunkoStorageError("Extensión no permitida: {}" + extension));
+        }
+
+        var contentType = file.ContentType?.ToLowerInvariant();
+        if (contentType == null || !_allowedContentTypes.Any(ct => contentType.Contains(ct.Split('/')[1])))
+        {
+            return UnitResult.Failure<FunkoError>(
+                new FunkoStorageError("Tipo de contenido no permitido: {}" + contentType));
+        }
+
+        var filename = System.IO.Path.GetFileName(file.FileName);
+        if (filename.Contains("..") || filename.Contains('/') || filename.Contains('\\'))
+        {
+            return UnitResult.Failure<FunkoError>(new FunkoStorageError("Nombre de archivo no válido"));
+        }
+
+        return UnitResult.Success<FunkoError>();
+    }
+    
+    public Task<Result<string, FunkoError>> SaveFileAsync(IFormFile file, string folder)
+    {
+        var validation = ValidateFile(file);
+        if (validation.IsFailure)
+        {
+            return Task.FromResult(Result.Failure<string, FunkoError>(validation.Error));
+        }
+
+        try
+        {
+            // Generar nombre único
+            var filename = GenerateUniqueFilename(file.FileName);
+
+            // Crear directorio destino
+            var folderPath = System.IO.Path.Combine(_rootPath, folder);
+            Directory.CreateDirectory(folderPath);
+
+            // Guardar ficheiro
+            var filePath = System.IO.Path.Combine(folderPath, filename);
+            var relativePath = GetRelativePath(filename, folder);
+
+            using var stream = new FileStream(filePath, FileMode.Create);
+            file.CopyTo(stream);
+
+            _logger.LogInformation("Archivo guardado: {Path}", relativePath);
+
+            return Task.FromResult(Result.Success<string, FunkoError>(relativePath));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error guardando archivo");
+            return Task.FromResult(Result.Failure<string, FunkoError>(
+                new FunkoStorageError("Error  guardando archivo")));
+        }
+    }
+
+    public Task<Result<bool, FunkoError>> DeleteFileAsync(string filename)
+    {
+        if (string.IsNullOrEmpty(filename))
+        {
+            return Task.FromResult(Result.Success<bool, FunkoError>(true));
+        }
+
+        try
+        {
+            var fullPath = GetFullPath(filename);
+
+            if (File.Exists(fullPath))
             {
-                if (!Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                    _logger.LogInformation("Directorio creado: {Path}", dir);
-                }
+                File.Delete(fullPath);
+                _logger.LogInformation("Archivo eliminado: {Filename}", filename);
             }
 
-            // Opcional: borrar archivos al iniciar (solo desarrollo)
-            if (_settings.DeleteOnStartup)
-            {
-                CleanDirectory(_rootPath);
-                _logger.LogInformation("Directorio de almacenamiento limpiado");
-            }
-        }, cancellationToken);
+            return Task.FromResult(Result.Success<bool, FunkoError>(true));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error eliminando archivo {Filename}", filename);
+            return Task.FromResult(Result.Failure<bool, FunkoError>(
+                new FunkoStorageError("Error eliminando archivo.")));
+        }
     }
 
-    public async Task<string> StoreAsync(
-        IFormFile file, 
-        string? folder = null,
-        CancellationToken cancellationToken = default)
+    public bool FileExists(string filename)
     {
-        // Validar archivo
-        if (file == null || file.Length == 0)
-            throw new ArgumentException("El archivo es nulo o vacío", nameof(file));
-
-        if (file.Length > _settings.MaxFileSize)
-            throw new FileSizeExceededException(
-                $"El archivo excede el tamaño máximo de {_settings.MaxFileSize / 1024 / 1024}MB");
-
-        // Validar extensión
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!_settings.AllowedExtensions.Contains(extension))
-            throw new InvalidFileTypeException(
-                $"Tipo de archivo no permitido: {extension}");
-
-        // Generar nombre único
-        var fileName = GenerateFileName(file.FileName);
-        var folderPath = GetFolderPath(folder);
-        var filePath = Path.Combine(folderPath, fileName);
-
-        // Asegurar que el directorio existe
-        Directory.CreateDirectory(folderPath);
-
-        // Guardar archivo
-        await using var stream = new FileStream(filePath, FileMode.Create);
-        await file.CopyToAsync(stream, cancellationToken);
-
-        _logger.LogInformation("Archivo guardado: {FileName} ({Size} bytes)", 
-            fileName, file.Length);
-
-        return fileName;
-    }
-
-    public async Task<string> StoreAsync(
-        Stream stream,
-        string fileName,
-        string? folder = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (stream == null)
-            throw new ArgumentNullException(nameof(stream));
-        
-        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        if (!_settings.AllowedExtensions.Contains(extension))
-            throw new InvalidFileTypeException(
-                $"Tipo de archivo no permitido: {extension}");
-
-        var fileNameGenerated = GenerateFileName(fileName);
-        var folderPath = GetFolderPath(folder);
-        var filePath = Path.Combine(folderPath, fileNameGenerated);
-
-        Directory.CreateDirectory(folderPath);
-
-        await using var fileStream = new FileStream(filePath, FileMode.Create);
-        await stream.CopyToAsync(fileStream, cancellationToken);
-
-        return fileNameGenerated;
-    }
-
-    public Task<Stream> LoadAsStreamAsync(
-        string fileName, 
-        string? folder = null,
-        CancellationToken cancellationToken = default)
-    {
-        var filePath = GetFilePath(fileName, folder);
-        
-        if (!File.Exists(filePath))
-            throw new FileNotFoundException($"Archivo no encontrado: {fileName}");
-
-        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-        return Task.FromResult<Stream>(stream);
-    }
-
-    public string GetFilePath(string fileName, string? folder = null)
-    {
-        return Path.Combine(GetFolderPath(folder), fileName);
-    }
-
-    public string GetUrl(string fileName, string? folder = null)
-    {
-        var path = folder != null ? $"/uploads/{folder}/{fileName}" : $"/uploads/{fileName}";
-        return path.Replace("\\", "/"); // Normalizar para Windows
-    }
-
-    public bool Exists(string fileName, string? folder = null)
-    {
-        var filePath = GetFilePath(fileName, folder);
-        return File.Exists(filePath);
-    }
-
-    public async Task<bool> DeleteAsync(
-        string fileName, 
-        string? folder = null,
-        CancellationToken cancellationToken = default)
-    {
-        var filePath = GetFilePath(fileName, folder);
-        
-        if (!File.Exists(filePath))
+        if (string.IsNullOrEmpty(filename))
             return false;
 
-        await Task.Run(() => File.Delete(filePath), cancellationToken);
-        _logger.LogInformation("Archivo eliminado: {FileName}", fileName);
-        
-        return true;
-    }
+        var fullPath = GetFullPath(filename);
+        return File.Exists(fullPath);    }
 
-    public async Task DeleteAllAsync(
-        string? folder = null,
-        CancellationToken cancellationToken = default)
+    public string GetFullPath(string filename)
     {
-        var folderPath = GetFolderPath(folder);
-        
-        if (Directory.Exists(folderPath))
-        {
-            await Task.Run(() => CleanDirectory(folderPath), cancellationToken);
-            _logger.LogInformation("Todos los archivos eliminados de: {Folder}", folderPath);
-        }
+        if (System.IO.Path.IsPathRooted(filename))
+            return filename;
+
+        var cleanFilename = filename;
+        var prefix = $"/{_uploadPath}/";
+
+        if (filename.StartsWith("/storage/", StringComparison.OrdinalIgnoreCase))
+            cleanFilename = filename["/storage/".Length..];
+        else if (filename.StartsWith("/storage", StringComparison.OrdinalIgnoreCase))
+            cleanFilename = filename["/storage".Length..].TrimStart('/');
+        else if (filename.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            cleanFilename = filename[prefix.Length..];
+
+        return System.IO.Path.Combine(_rootPath, cleanFilename);
     }
 
-    public Task<IEnumerable<string>> ListFilesAsync(string? folder = null)
+    public string GetRelativePath(string filename, string folder = "funkos")
     {
-        var folderPath = GetFolderPath(folder);
-        
-        if (!Directory.Exists(folderPath))
-            return Task.FromResult<IEnumerable<string>>(Array.Empty<string>());
-
-        var files = Directory.GetFiles(folderPath)
-            .Select(Path.GetFileName)
-            .Where(name => name is not null)
-            .Select(name => name!);
-        
-        return Task.FromResult(files);
+        return $"/{_uploadPath}/{folder}/{filename}";    
     }
-
-    #region Métodos Privados
-
-    private string GetFolderPath(string? folder)
-    {
-        if (string.IsNullOrEmpty(folder))
-            return _rootPath;
-
-        var folderPath = Path.Combine(_rootPath, folder);
-        return Path.GetFullPath(folderPath);
-    }
-
-    private static string GenerateFileName(string originalFileName)
-    {
-        var extension = Path.GetExtension(originalFileName);
-        var uniqueName = Guid.NewGuid().ToString("N")[..16]; // 16 caracteres
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-        return $"{timestamp}_{uniqueName}{extension}";
-    }
-
-    private static void CleanDirectory(string path)
-    {
-        if (!Directory.Exists(path)) return;
-
-        foreach (var file in Directory.GetFiles(path))
-        {
-            try { File.Delete(file); }
-            catch { /* Ignorar errores al borrar */ }
-        }
-    }
-
-    #endregion
 }

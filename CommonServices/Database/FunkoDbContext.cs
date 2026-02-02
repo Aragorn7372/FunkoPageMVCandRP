@@ -72,7 +72,7 @@ public class FunkoDbContext : DbContext
             Id = 1,
             Name = "Goku Super Saiyan",
             CategoryId = categoriaAnimeId,  
-            Imagen = "goku.png",
+            Imagen = "uploads/default.png",
             Price = 19.99,
             CreatedAt = DateTime.UtcNow,  
             UpdatedAt = DateTime.UtcNow 
@@ -83,7 +83,7 @@ public class FunkoDbContext : DbContext
             Id = 2,
             Name = "Darth Vader",
             CategoryId = categoriaPeliculasId, 
-            Imagen = "vader.png",
+            Imagen = "uploads/default.png",
             Price = 24.50,
             CreatedAt = DateTime.UtcNow,  
             UpdatedAt = DateTime.UtcNow 
@@ -94,7 +94,7 @@ public class FunkoDbContext : DbContext
             Id = 3,
             Name = "Mario Bros",
             CategoryId = categoriaVideojuegosId,  
-            Imagen = Funko.IMAGE_DEFAULT,
+            Imagen = "uploads/"+Funko.IMAGE_DEFAULT,
             Price = 17.75,
             CreatedAt = DateTime.UtcNow,  
             UpdatedAt = DateTime.UtcNow 

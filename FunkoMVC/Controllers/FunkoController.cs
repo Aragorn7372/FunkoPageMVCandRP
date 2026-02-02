@@ -1,6 +1,8 @@
-﻿namespace FunkoMVC.Controllers;
+﻿using Microsoft.AspNetCore.Mvc;
 
-public class FunkoController
+namespace FunkoMVC.Controllers;
+
+public class FunkoController:Controller
 {
-    
+   
 }

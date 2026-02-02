@@ -1,6 +1,12 @@
-﻿namespace CommonServices.Mapper;
+﻿using CommonServices.Dto;
+using CommonServices.model;
 
-public class CategoriaMapper
+namespace CommonServices.Mapper;
+
+public static class CategoriaMapper
 {
-    
+    public static CategoriaResponseDto ToDto(this Categoria categoria)
+    {
+        return new CategoriaResponseDto(categoria.Id, categoria.Nombre);
+    }
 }
