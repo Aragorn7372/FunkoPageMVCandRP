@@ -1,10 +1,69 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Funkos";
 }
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-center mb-0">Lista de Funkos</h1>
+        <a asp-page="./Edit" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Crear Funko
+        </a>
+    </div>
+    <!-- Buscador -->
+    <div class="row mb-4">
+        <form method="get">
+            <div class="input-group">
+                <input type="text" asp-for="Nombre" class="form-control" placeholder="Buscar por nombre...">
+                
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+                
+                @if (!string.IsNullOrEmpty(Model.Nombre))
+                {
+                    <a asp-page="./Index" class="btn btn-outline-secondary">Limpiar</a>
+                }
+            </div>
+        </form>
+    </div>
+    <!-- Funko -->
+    @foreach (var funko in Model.FunkoResponses)
+    {
+        <div class="card mb-3 funko">
+            <div class="row g-0 align-items-center">
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+                <div class="col-md-2 text-center">
+                    <img src="@funko.Imagen" class="img-fluid rounded-start p-2" alt="Funko">
+                </div>
+                <div class="col-md-7">
+                    <div class="card-body">
+                        <h5 class="card-title">@funko.Nombre</h5>
+                        <p class="card-text mb-1">@funko.Id</p>
+                        <p class="card-text mb-1">@funko.Categoria</p>
+                        <p class="card-text">@funko.Precio</p>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center mb-3 mb-md-0">
+                    <a asp-page="./Funko" asp-route-id="@funko.Id" class="btn btn-info btn-sm text-white" title="Detalles">
+                        <i class="bi bi-eye">Detalles</i>
+                    </a>
+                    <a asp-page="./Edit" asp-route-id="@funko.Id" class="btn btn-warning btn-sm text-white" title="Editar">
+                        <i class="bi bi-pencil">Editar</i>
+                    </a>
+
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@funko.Id"
+                          style="display:inline;"
+                          onsubmit="return confirm('¿Seguro que quieres borrar a @funko.Nombre?');">
+
+                        <button type="submit" class="btn btn-danger btn-sm" title="Borrar">
+                            <i class="bi bi-trash">Eliminar</i>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    }
 </div>
+

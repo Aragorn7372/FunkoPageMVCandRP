@@ -1,0 +1,62 @@
+﻿@page "Funko/{id:long}"
+@model FunkoRP.Pages.Funko
+@{
+    ViewData["Title"] = "Detalle Funko";
+}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="card shadow">
+                <div class="row g-0">
+
+                    <!-- Imagen -->
+                    <div class="col-md-4 text-center p-3">
+                        <img src="@Model.FunkoResponses.Imagen"
+                             class="img-fluid rounded"
+                             alt="Imagen de @Model.FunkoResponses.Nombre">
+                    </div>
+
+                    <!-- Datos -->
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h3 class="card-title">@Model.FunkoResponses.Nombre</h3>
+
+                            <p class="card-text">
+                                <strong>ID:</strong> @Model.FunkoResponses.Id
+                            </p>
+
+                            <p class="card-text">
+                                <strong>Categoría:</strong> @Model.FunkoResponses.Categoria
+                            </p>
+
+                            <p class="card-text">
+                                <strong>Precio:</strong> @Model.FunkoResponses.Precio €
+                            </p>
+
+                            <div class="mt-4">
+                                <a asp-page="./Edit"
+                                   asp-route-id="@Model.FunkoResponses.Id"
+                                   class="btn btn-warning text-white me-2">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+
+                                <a asp-page="/Index"
+                                   class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Volver
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+

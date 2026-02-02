@@ -29,3 +29,71 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.buscador {
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+.buscador input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.funko {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.funko-left {
+  display: flex;
+  align-items: center;
+}
+
+.funko img {
+  width: 120px;
+  border-radius: 6px;
+  margin-right: 20px;
+}
+
+.funko-info h3 {
+  margin: 0 0 5px 0;
+}
+
+.funko-info p {
+  margin: 3px 0;
+  color: #555;
+}
+
+.acciones button {
+  margin-left: 5px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+}
+
+.ver { background: #17a2b8; }
+.editar { background: #ffc107; color: black; }
+.eliminar { background: #dc3545; }
+
+.acciones button:hover {
+  opacity: 0.8;
+}
