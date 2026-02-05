@@ -1,13 +1,15 @@
 ﻿
 
 using CommonServices.model;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CommonServices.Database;
 /// <summary>
 /// clase de configuracion de la base de datos donde se indican las tablas y columnas
 /// </summary>
-public class FunkoDbContext : DbContext
+public class FunkoDbContext(DbContextOptions<FunkoDbContext> options)  : IdentityDbContext<User, IdentityRole<int>, int>(options)
 {
     /// <summary>
     /// genera tablas y columnas
@@ -23,15 +25,7 @@ public class FunkoDbContext : DbContext
     
     public DbSet<Funko> Funkos { get; set; } = null!;
     public DbSet<Categoria> Categorias { get; set; } = null!;
-
     
-  /// <summary>
-  /// contructor con parametros
-  /// </summary>
-  /// <param name="options">opcionas para configurar la clase</param>
-    public FunkoDbContext(DbContextOptions<FunkoDbContext> options)
-        : base(options)
-    { }
    
         
 /// <summary>

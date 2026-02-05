@@ -1,0 +1,11 @@
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+
+namespace FunkoRP.Pages;
+
+public class AccessDenied : PageModel
+{
+    public void OnGet()
+    {
+        
+    }
+}
