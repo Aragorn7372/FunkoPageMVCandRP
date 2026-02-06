@@ -41,6 +41,7 @@ builder.Services.AddStorage();
 
 var app = builder.Build();
 
+await app.SeedIdentityAsync();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
