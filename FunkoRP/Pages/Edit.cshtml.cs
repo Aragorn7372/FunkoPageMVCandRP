@@ -56,13 +56,32 @@ public class Edit(IServiceFunko service,IServiceCategoria serviceCategoria, ILog
 
         if (EsEdicion)
         {
-            await service.UpdateAsync(Id!.Value, Funko, File);
+            var result=await service.UpdateAsync(Id!.Value, Funko, File);
+            if (result.IsSuccess)
+            {
+                TempData["Actualizado"] = $"{Funko.Nombre} actualizado con éxito, ya es parte de la colección.";
+            }
+            else
+            {
+                ModelState.AddModelError("ImageFile", $"Error guardando el Funko: {result.Error.Error}");
+                return Page();
+            }
+            
         }
         else
         {
-            await service.CreateAsync(Funko, File);
+            var result=await service.CreateAsync(Funko, File);
+            if (result.IsSuccess)
+            {
+                TempData["Creado"] = $"{Funko.Nombre} creado con éxito, ya es parte de la colección.";
+            }
+            else
+            {
+                ModelState.AddModelError("ImageFile", $"Error creando el Funko: {result.Error.Error}");
+                return Page();
+            }
         }
-
+        
         return RedirectToPage("Index");
     }
 }

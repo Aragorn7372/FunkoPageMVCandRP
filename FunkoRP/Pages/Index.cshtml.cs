@@ -1,5 +1,6 @@
 using CommonServices.Dto;
 using CommonServices.Services.Funkos;
+using FunkoRP.Session;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -8,6 +9,7 @@ namespace FunkoRP.Pages;
 public class IndexModel(IServiceFunko service, ILogger<IndexModel> logger) : PageModel
 {
     public IEnumerable<FunkoResponseDto> FunkoResponses { get; set; } = [];
+    public List<FunkoResponseDto> VistosRecientemente { get; private set; } = [];
     [BindProperty(SupportsGet = true)]
     public string? Nombre { get; set; }
 
@@ -20,6 +22,7 @@ public class IndexModel(IServiceFunko service, ILogger<IndexModel> logger) : Pag
         if (result.IsSuccess) FunkoResponses = result.Value.Items;
         else FunkoResponses = [];
         logger.LogInformation("funkos obtenidos " + FunkoResponses.ToList().Count);
+        VistosRecientemente = HttpContext.Session.GetJson<List<FunkoResponseDto>>("VistosRecientemente") ?? new();
         return Page();
     }
 
@@ -37,10 +40,9 @@ public class IndexModel(IServiceFunko service, ILogger<IndexModel> logger) : Pag
 
         if (!result.IsSuccess || result.Value == null)
         {
-      
-            return RedirectToPage("/Error");
-            // return NotFound();
+            return NotFound();
         }
+        TempData["Eliminado"] = $"{result.Value.Nombre} fue eliminado con éxito.";
         return RedirectToPage();
     }
 }
