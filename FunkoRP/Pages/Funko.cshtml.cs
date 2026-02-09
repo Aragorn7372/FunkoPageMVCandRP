@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace FunkoRP.Pages;
 
 
-public class Funko(IServiceFunko service) : PageModel
+public class Funko(IServiceFunko service, ILogger<Funko> logger) : PageModel
 {
     public FunkoResponseDto FunkoResponses { get; set; }
 
@@ -16,6 +16,12 @@ public class Funko(IServiceFunko service) : PageModel
     public async Task<IActionResult> OnGet(
         long id)
     {
+        if (!User.IsInRole("User") && !User.IsInRole("Admin"))
+        {
+            logger.LogWarning("Usuario sin permisos intentó acceder Funko con id: {Id}", id);
+            TempData["ErrorMessage"] = "No tienes permisos para acceder Funkos";
+            return RedirectToPage("/AccessDenied");
+        }
         var result = await service.GetByIdAsync(id);
 
         if (!result.IsSuccess || result.Value == null)

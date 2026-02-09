@@ -1,0 +1,63 @@
+﻿@model FunkoMVC.Controllers.AuthController.InputModel
+
+<div class="container min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">
+    <div class="card shadow-lg border-0" style="max-width:420px;width:100%;">
+        <div class="card-body p-4">
+
+            <div class="text-center mb-4">
+                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-primary text-white"
+                     style="width: 72px; height: 72px;">
+                    <i class="bi bi-person-circle fs-1"></i>
+                </div>
+                <h1 class="h4 fw-bold">Bienvenido</h1>
+                <p class="text-muted small mb-0">Gestiona tu colección de Funkos</p>
+            </div>
+
+            <!-- ModelState Errors -->
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger py-2 small">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @foreach (var modelError in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        @modelError.ErrorMessage <br />
+                    }
+                </div>
+            }
+
+            <form method="post" novalidate>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" placeholder="admin@admin.com" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label fw-semibold"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" />
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label small">Mantener sesión iniciada</label>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary">
+                        Entrar <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

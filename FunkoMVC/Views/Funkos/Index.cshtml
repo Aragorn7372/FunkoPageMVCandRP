@@ -1,0 +1,211 @@
+﻿@model FunkoMVC.Model.FunkoPageViewModel
+
+@{
+    ViewData["Title"] = "Catálogo de Funkos";
+}
+
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Catálogo de Funkos</h1>
+            <p class="text-muted mb-0">Gestiona y administra tu colección</p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Nuevo Funko
+        </a>
+        <form asp-controller="Auth" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+        </form>
+    </div>
+
+    <!-- Vistos recientemente -->
+    @if (Model.VistosRecientemente.Any())
+    {
+        <div class="mb-5">
+            <h6 class="text-muted mb-3">
+                <i class="bi bi-clock-history"></i> Vistos recientemente
+            </h6>
+
+            <div class="row g-3">
+                @foreach (var funko in Model.VistosRecientemente)
+                {
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <img src="@funko.Imagen"
+                                     class="rounded-circle me-3"
+                                     style="width:48px;height:48px;object-fit:cover"
+                                     onerror="this.src='/uploads/default.png'" />
+
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-truncate">@funko.Nombre</div>
+                                    <span class="badge bg-secondary">@funko.Categoria</span>
+                                </div>
+
+                                <a asp-action="Details"
+                                   asp-route-id="@funko.Id"
+                                   class="btn btn-sm btn-outline-primary ms-2">
+                                    Ver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Mensajes -->
+    @if (TempData["Creado"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Creado"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Actualizado"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show">
+            @TempData["Actualizado"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Eliminado"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Eliminado"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Búsqueda -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index">
+                <div class="input-group">
+                    <input asp-for="Nombre"
+                           class="form-control"
+                           placeholder="Buscar Funko por nombre..." />
+
+                    <button class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+
+                    @if (!string.IsNullOrEmpty(Model.Nombre))
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            Limpiar
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grid de Funkos -->
+    <div class="row g-4">
+        @if (Model.Funkos.Any())
+        {
+            @foreach (var item in Model.Funkos)
+            {
+                <div class="col-sm-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+
+                        <div class="card-body text-center">
+                            <img src="@item.Imagen"
+                                 alt="@item.Nombre"
+                                 class="rounded-circle mb-3 shadow"
+                                 style="width:90px;height:90px;object-fit:cover"
+                                 onerror="this.src='/uploads/default.png'" />
+
+                            <h6 class="fw-bold mb-1">@item.Nombre</h6>
+                            <span class="badge bg-secondary mb-2">@item.Categoria</span>
+
+                            <div class="fw-bold text-success fs-5 mt-2">
+                                @item.Precio.ToString("C")
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white border-0 d-flex justify-content-center gap-2">
+                            <a asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-info btn-sm"
+                               title="Detalles">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <a asp-action="Update"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-warning btn-sm"
+                               title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            <form method="post"
+                                  asp-action="Delete"
+                                  asp-route-id="@item.Id"
+                                  onsubmit="return confirm('¿Seguro que quieres borrar a @item.Nombre?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="btn btn-outline-danger btn-sm"
+                                        title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="text-center text-muted py-5">
+                    <em>No encontramos Funkos con ese nombre.</em>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Paginación -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-PageNumber="@(Model.PageNumber - 1)"
+                       asp-route-Nombre="@Model.Nombre">
+                        &laquo;
+                    </a>
+                </li>
+
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        Página @Model.PageNumber de @Model.TotalPages
+                    </span>
+                </li>
+
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-PageNumber="@(Model.PageNumber + 1)"
+                       asp-route-Nombre="@Model.Nombre">
+                        &raquo;
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    }
+</div>

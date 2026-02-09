@@ -1,6 +1,7 @@
 ﻿using CommonServices.Dto;
 using CommonServices.Services.Categorias;
 using CommonServices.Services.Funkos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -25,6 +26,12 @@ public class Edit(IServiceFunko service,IServiceCategoria serviceCategoria, ILog
     public IEnumerable<CategoriaResponseDto> Categorias { get; set; }
     public async Task<IActionResult> OnGetAsync()
     {
+        if (!User.IsInRole("Admin"))
+        {
+            logger.LogWarning("Usuario sin permisos intentó crear o actualizar Funko");
+            TempData["ErrorMessage"] = "No tienes permisos para eliminar crear o actualizar";
+            return RedirectToPage("/AccessDenied");
+        }
         logger.LogInformation("obteniendo categorias");
         Categorias = await serviceCategoria.GetAllAsync();
         logger.LogInformation("es crear o editar");
@@ -48,8 +55,15 @@ public class Edit(IServiceFunko service,IServiceCategoria serviceCategoria, ILog
         return Page();
     }
 
+    
     public async Task<IActionResult> OnPostAsync()
     {
+        if (!User.IsInRole("Admin"))
+        {
+            logger.LogWarning("Usuario sin permisos intentó eliminar Funko");
+            TempData["ErrorMessage"] = "No tienes permisos para eliminar Funkos";
+            return RedirectToPage("/AccessDenied");
+        }
         logger.LogInformation(ModelState.ToString());
         if (!ModelState.IsValid)
             return Page();

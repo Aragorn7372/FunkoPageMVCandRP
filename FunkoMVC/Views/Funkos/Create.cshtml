@@ -1,0 +1,117 @@
+﻿@using CommonServices.Dto
+@model FunkoRequestDto
+
+@{
+    ViewData["Title"] = "Nuevo Funko";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <!-- Título -->
+            <div class="mb-5">
+                <h2 class="fw-bold">
+                    <i class="bi bi-plus-circle text-success"></i>
+                    Crear nuevo Funko
+                </h2>
+                <p class="text-muted mb-0">
+                    Completa la información para añadir un nuevo producto al catálogo
+                </p>
+            </div>
+
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger mb-4"
+                     role="alert">
+                </div>
+
+                <div class="row g-4">
+
+                    <!-- Columna izquierda -->
+                    <div class="col-md-7">
+
+                        <!-- Nombre -->
+                        <div class="mb-4">
+                            <label asp-for="Nombre" class="form-label fw-semibold"></label>
+                            <input asp-for="Nombre"
+                                   class="form-control form-control-lg"
+                                   placeholder="Ej: Batman" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <!-- Categoría -->
+                        <div class="mb-4">
+                            <label asp-for="Categoria" class="form-label fw-semibold"></label>
+                            <input asp-for="Categoria"
+                                   class="form-control"
+                                   placeholder="Ej: MARVEL" />
+                            <div class="form-text">
+                                POKEMON · MARVEL · WOW · TERROR
+                            </div>
+                            <span asp-validation-for="Categoria" class="text-danger"></span>
+                        </div>
+
+                        <!-- Precio -->
+                        <div class="mb-4">
+                            <label asp-for="Price" class="form-label fw-semibold"></label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">€</span>
+                                <input asp-for="Price"
+                                       type="number"
+                                       step="0.01"
+                                       class="form-control" />
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Columna derecha -->
+                    <div class="col-md-5">
+
+                        <div class="border rounded-3 p-4 h-100 bg-light">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="bi bi-image"></i> Imagen del Funko
+                            </h6>
+
+                            <input type="file"
+                                   name="imagen"
+                                   id="imagen"
+                                   class="form-control"
+                                   accept=".jpg,.jpeg,.png,.gif" />
+
+                            @if (!ViewData.ModelState.IsValid &&
+                                 ViewData.ModelState["Imagen"] != null &&
+                                 ViewData.ModelState["Imagen"]!.Errors.Count > 0)
+                            {
+                                <span class="text-danger d-block mt-2">
+                                    @ViewData.ModelState["Imagen"]!.Errors[0].ErrorMessage
+                                </span>
+                            }
+
+                            <small class="text-muted d-block mt-3">
+                                Formatos permitidos: JPG, PNG, GIF
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="d-flex justify-content-end gap-2 mt-5">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success px-4">
+                        Guardar Funko
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

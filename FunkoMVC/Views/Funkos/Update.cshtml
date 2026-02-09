@@ -1,0 +1,125 @@
+﻿@model FunkoMVC.Model.FunkoPostViewModel
+
+@{
+    ViewData["Title"] = "Editar Funko";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <!-- Header -->
+            <div class="mb-4">
+                <h2 class="fw-bold">
+                    <i class="bi bi-pencil-square text-warning"></i>
+                    Editar Funko
+                </h2>
+                <p class="text-muted mb-0">
+                    Modifica la información del producto seleccionado
+                </p>
+            </div>
+
+            <form asp-action="Update"
+                  asp-route-id="@Model.Id"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Form.Image" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger mb-4">
+                </div>
+
+                <div class="row g-4">
+
+                    <!-- Columna izquierda -->
+                    <div class="col-md-7">
+
+                        <div class="mb-4">
+                            <label asp-for="Form.Nombre" class="form-label fw-semibold"></label>
+                            <input asp-for="Form.Nombre"
+                                   class="form-control form-control-lg"
+                                   placeholder="Ej: Batman" />
+                            <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Form.Categoria" class="form-label fw-semibold"></label>
+                            <input asp-for="Form.Categoria" class="form-control" />
+                            <div class="form-text">
+                                POKEMON · MARVEL · WOW · TERROR
+                            </div>
+                            <span asp-validation-for="Form.Categoria" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Form.Price" class="form-label fw-semibold"></label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">€</span>
+                                <input asp-for="Form.Price"
+                                       type="number"
+                                       step="0.01"
+                                       class="form-control" />
+                            </div>
+                            <span asp-validation-for="Form.Price" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Columna derecha: Imagen -->
+                    <div class="col-md-5">
+                        <div class="border rounded-3 p-4 h-100 bg-light">
+
+                            <h6 class="fw-semibold mb-3">
+                                <i class="bi bi-image"></i> Imagen del Funko
+                            </h6>
+
+                            <!-- Preview imagen actual -->
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="@Model.Form.Image"
+                                     alt="Imagen actual"
+                                     class="rounded-circle me-3 shadow-sm"
+                                     style="width:72px;height:72px;object-fit:cover"
+                                     onerror="this.src='/uploads/default.png'" />
+
+                                <div>
+                                    <small class="text-muted d-block">Imagen actual</small>
+                                    <span class="small text-break">
+                                        @System.IO.Path.GetFileName(Model.Form.Image)
+                                    </span>
+                                </div>
+                            </div>
+
+                            <label asp-for="ImageFile"
+                                   class="form-label small text-muted">
+                                Cambiar imagen (opcional)
+                            </label>
+
+                            <input asp-for="ImageFile"
+                                   type="file"
+                                   class="form-control"
+                                   accept=".jpg,.jpeg,.png,.gif" />
+
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="d-flex justify-content-end gap-2 mt-5">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-warning px-4">
+                        Guardar cambios
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

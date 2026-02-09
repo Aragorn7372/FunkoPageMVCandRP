@@ -1,0 +1,16 @@
+﻿@page
+@model FunkoMVC.Pages.NotFound
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="container mt-5 text-center">
+    <h1 class="display-4 text-danger">404</h1>
+    <h3>@Model.Mensaje</h3>
+
+    <a asp-page="/Index" class="btn btn-primary mt-3">
+        Volver al inicio
+    </a>
+</div>
+
+
