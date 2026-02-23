@@ -6,7 +6,6 @@
 
 <div class="container py-4">
 
-    <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h1 class="fw-bold mb-1">Catálogo de Funkos</h1>
@@ -16,7 +15,7 @@
         <a asp-action="Create" class="btn btn-success">
             <i class="bi bi-plus-lg"></i> Nuevo Funko
         </a>
-        <form asp-controller="Auth" asp-action="Logout" method="post">
+        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-outline-danger">
                 <i class="bi bi-box-arrow-right"></i> Cerrar sesión
@@ -24,7 +23,6 @@
         </form>
     </div>
 
-    <!-- Vistos recientemente -->
     @if (Model.VistosRecientemente.Any())
     {
         <div class="mb-5">
@@ -61,7 +59,6 @@
         </div>
     }
 
-    <!-- Mensajes -->
     @if (TempData["Creado"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show">
@@ -86,7 +83,6 @@
         </div>
     }
 
-    <!-- Búsqueda -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="get" asp-action="Index">
@@ -110,7 +106,6 @@
         </div>
     </div>
 
-    <!-- Grid de Funkos -->
     <div class="row g-4">
         @if (Model.Funkos.Any())
         {
@@ -175,33 +170,38 @@
         }
     </div>
 
-    <!-- Paginación -->
     @if (Model.TotalPages > 1)
     {
-        <nav class="mt-5">
+        <nav aria-label="Navegación de páginas de Funkos" class="mt-5">
             <ul class="pagination justify-content-center">
 
-                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <li class="page-item @(Model.PageNumber <= 0 ? "disabled" : "")">
                     <a class="page-link"
                        asp-action="Index"
-                       asp-route-PageNumber="@(Model.PageNumber - 1)"
-                       asp-route-Nombre="@Model.Nombre">
-                        &laquo;
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-nombre="@Model.Nombre">
+                        Anterior
                     </a>
                 </li>
 
-                <li class="page-item disabled">
-                    <span class="page-link">
-                        Página @Model.PageNumber de @Model.TotalPages
-                    </span>
-                </li>
+                @for (int i = 0; i < Model.TotalPages; i++)
+                {
+                    <li class="page-item @(Model.PageNumber == i ? "active" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-pageNumber="@i"
+                           asp-route-nombre="@Model.Nombre">
+                            @(i + 1)
+                        </a>
+                    </li>
+                }
 
-                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <li class="page-item @(Model.PageNumber >= Model.TotalPages - 1 ? "disabled" : "")">
                     <a class="page-link"
                        asp-action="Index"
-                       asp-route-PageNumber="@(Model.PageNumber + 1)"
-                       asp-route-Nombre="@Model.Nombre">
-                        &raquo;
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-nombre="@Model.Nombre">
+                        Siguiente
                     </a>
                 </li>
 
